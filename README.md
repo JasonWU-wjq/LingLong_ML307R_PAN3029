@@ -1,4 +1,4 @@
-# 灵龙壁挂炉 IoT 控制器
+# 玲珑壁挂炉 IoT 控制器
 
 **LingLong Gas Boiler IoT Controller — ML307R (CAT1) + PNA3029 (LoRa)**
 
@@ -6,7 +6,7 @@
 
 ## 项目概述
 
-本项目是灵龙壁挂炉配套的物联网通信控制器固件，运行于 Renesas RA2L1 MCU。  
+本项目是玲珑壁挂炉配套的物联网通信控制器固件，运行于 Renesas RA2L1 MCU。  
 通过 ML307R CAT1 模块实现云端数据上报，通过 PNA3029 LoRa 模块实现与无线温控器的本地无线通信，同时支持循环水泵（LLS Pump）的定时/巡回自动控制。
 
 ---
