@@ -1,0 +1,23 @@
+# IAR build output
+Debug/
+Release/
+
+# IAR project settings (machine-specific)
+*.dep
+*.dni
+*.wsdt
+settings/
+
+# IAR browse info
+BrowseInfo/
+
+# Compiled output
+*.out
+*.hex
+*.bin
+*.map
+*.lst
+
+# Windows
+Thumbs.db
+Desktop.ini
