@@ -19,7 +19,7 @@
 //DIO4
 //#define DIO4_JUDGEIN
 
-//////////////////////LORA PNA3029（沿用原 SX1278 引脚）////////////////////
+//////////////////////LORA PAN3029（沿用原 SX1278 引脚）////////////////////
 #define RFSPI_CLK_SETDIR_OUT        R_IOPORT_PortDirectionSet(&g_ioport_ctrl, BSP_IO_PORT_02, OUTPUT, BIT8)
 #define RFSPI_CLK_SETOUT_LOW        R_IOPORT_PinWrite(&g_ioport_ctrl, BSP_IO_PORT_02_PIN_08, BSP_IO_LEVEL_LOW)
 #define RFSPI_CLK_SETOUT_HIGH       R_IOPORT_PinWrite(&g_ioport_ctrl, BSP_IO_PORT_02_PIN_08, BSP_IO_LEVEL_HIGH)

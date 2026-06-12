@@ -20,7 +20,7 @@
 
 #include  "../user_src/common_utils.h"
 #include  "../usr_lib/RFSPI.h"
-#include  "../usr_lib/PNA3029.h"
+#include  "../usr_lib/PAN3029.h"
 #include  "../usr_lib/at24.h"
 #include  "../usr_lib/nbpro.h"
 #include  "../usr_lib/datapro.h"

@@ -1,12 +1,12 @@
 /*
- * PNA3029.c
+ * PAN3029.c
  *
  *  Created on: 2026-05-14
  *      Author: ported from reference/user
  *
- * PNA3029 LoRa 收发驱动（替换 SX1278）。函数名与参考一致：
- *   PNA3029_Init / PNA3029_RX / PNA3029_Sleep / PNA3029_CADInit /
- *   PNA3029_ReceivePacket / PNA3029_SendPacket / PNA3029_Reset
+ * PAN3029 LoRa 收发驱动（替换 SX1278）。函数名与参考一致：
+ *   PAN3029_Init / PAN3029_RX / PAN3029_Sleep / PAN3029_CADInit /
+ *   PAN3029_ReceivePacket / PAN3029_SendPacket / PAN3029_Reset
  *
  * 通信参数（必须与现场温控器/水泵接收器一致）：
  *   频点  = 477MHz + LoRaChannel × 250kHz  （默认 LoRaChannel=10 → 479.5MHz）
@@ -17,9 +17,9 @@
  */
 
 #include "../usr_lib/sys.h"
-#include "../usr_lib/PNA3029.h"
+#include "../usr_lib/PAN3029.h"
 
-/* PNA3029 内部状态机寄存器值 */
+/* PAN3029 内部状态机寄存器值 */
 #define PNA_RF_STATE_DEEPSLEEP  0x00
 #define PNA_RF_STATE_SLEEP      0x01
 #define PNA_RF_STATE_STB1       0x02
@@ -123,31 +123,31 @@
 #define PNA_RX_PEEK_LEN                 8
 
 /* 调试可观测变量 */
-unsigned char PNA3029SpiOk;
-unsigned char PNA3029SpiCheckReg;
-unsigned char PNA3029SpiCheckError;
-unsigned char PNA3029LastIrq;
-unsigned char PNA3029TxDone;
-unsigned char PNA3029TxUseLongPreamble;
-unsigned char PNA3029TxLen;
-unsigned int  PNA3029TxWaitMs;
-unsigned int  PNA3029TxElapsedMs;
-unsigned int  PNA3029TxTimeoutCount;
-unsigned char PNA3029CalMarker;
-unsigned char PNA3029CalPaBias;
-unsigned char PNA3029PaBiasRaw;
-unsigned char PNA3029PaBiasApplied;
-unsigned char PNA3029RxLen;
-unsigned char PNA3029RxError;
-unsigned char PNA3029State;
-unsigned char PNA3029CurrentChannel = 0xff;
+unsigned char PAN3029SpiOk;
+unsigned char PAN3029SpiCheckReg;
+unsigned char PAN3029SpiCheckError;
+unsigned char PAN3029LastIrq;
+unsigned char PAN3029TxDone;
+unsigned char PAN3029TxUseLongPreamble;
+unsigned char PAN3029TxLen;
+unsigned int  PAN3029TxWaitMs;
+unsigned int  PAN3029TxElapsedMs;
+unsigned int  PAN3029TxTimeoutCount;
+unsigned char PAN3029CalMarker;
+unsigned char PAN3029CalPaBias;
+unsigned char PAN3029PaBiasRaw;
+unsigned char PAN3029PaBiasApplied;
+unsigned char PAN3029RxLen;
+unsigned char PAN3029RxError;
+unsigned char PAN3029State;
+unsigned char PAN3029CurrentChannel = 0xff;
 
 /* 缓存当前页与射频状态，避免重复写页寄存器、方便调试观察 */
 static unsigned char gPanPage = 0xff;
 static unsigned char gPanState = PNA_RF_STATE_STB3;
 static unsigned char gPanRegulatorMode = 0;
 
-/* 低频段 AGC 表，按寄存器组顺序写入，顺序不可变（PNA3029 厂家参考配置） */
+/* 低频段 AGC 表，按寄存器组顺序写入，顺序不可变（PAN3029 厂家参考配置） */
 static const unsigned char gLowFreqAgcCfg[40] = {
     0x06, 0x00, 0xf8, 0x06, 0x06, 0x00, 0xf8, 0x06,
     0x06, 0x00, 0xf8, 0x06, 0x06, 0x00, 0xf8, 0x06,
@@ -310,7 +310,7 @@ static void PNA_SetRfState(unsigned char state)
 {
     RFSPIWriteReg(PNA_REG_RF_STATE, state);
     gPanState = state;
-    PNA3029State = state;
+    PAN3029State = state;
 }
 
 static void PNA_ExitSleepState(void)
@@ -367,25 +367,25 @@ static void PNA_SetTxPower(void)
     unsigned char paBias;
     unsigned char temp;
 
-    PNA_WritePageReg(PNA_PAGE_LORA, PNA_LORA_REG_PA_RAMP, (unsigned char)(PNA3029_RF_TX_POWER_LDO & 0x01));
-    PNA_WritePageReg(PNA_PAGE_SYS, PNA_SYS_REG_TX_POWER_RAMP, PNA3029_RF_TX_POWER_RAMP);
-    PNA_WritePageReg(PNA_PAGE_SYS, PNA_SYS_REG_PA_TRIM, (unsigned char)(PNA3029_RF_TX_POWER_LDO >> 4));
+    PNA_WritePageReg(PNA_PAGE_LORA, PNA_LORA_REG_PA_RAMP, (unsigned char)(PAN3029_RF_TX_POWER_LDO & 0x01));
+    PNA_WritePageReg(PNA_PAGE_SYS, PNA_SYS_REG_TX_POWER_RAMP, PAN3029_RF_TX_POWER_RAMP);
+    PNA_WritePageReg(PNA_PAGE_SYS, PNA_SYS_REG_PA_TRIM, (unsigned char)(PAN3029_RF_TX_POWER_LDO >> 4));
 
-    if(PNA3029_RF_TX_POWER_PABIAS != 0x70) {
+    if(PAN3029_RF_TX_POWER_PABIAS != 0x70) {
         PNA_SetPageRegBits(PNA_PAGE_SYS, PNA_SYS_REG_PA_MODE, PNA_REG_BIT_PA_MODE);
     }
     else {
         PNA_ResetPageRegBits(PNA_PAGE_SYS, PNA_SYS_REG_PA_MODE, PNA_REG_BIT_PA_MODE);
     }
 
-    paBias = PNA3029PaBiasRaw;
+    paBias = PAN3029PaBiasRaw;
     if(paBias == 0) {
-        paBias = PNA3029_RF_TX_POWER_PABIAS_FALLBACK;
+        paBias = PAN3029_RF_TX_POWER_PABIAS_FALLBACK;
     }
 
-    temp = (unsigned char)(paBias - (PNA3029_RF_TX_POWER_PABIAS & 0x0F));
-    PNA3029PaBiasApplied = (unsigned char)((PNA3029_RF_TX_POWER_PABIAS & 0xF0) | (temp & 0x0F));
-    PNA_WritePageReg(PNA_PAGE_SYS, PNA_SYS_REG_PA_CFG, PNA3029PaBiasApplied);
+    temp = (unsigned char)(paBias - (PAN3029_RF_TX_POWER_PABIAS & 0x0F));
+    PAN3029PaBiasApplied = (unsigned char)((PAN3029_RF_TX_POWER_PABIAS & 0xF0) | (temp & 0x0F));
+    PNA_WritePageReg(PNA_PAGE_SYS, PNA_SYS_REG_PA_CFG, PAN3029PaBiasApplied);
 }
 
 static void PNA_Calibrate(void)
@@ -398,8 +398,8 @@ static void PNA_Calibrate(void)
         temp[i] = PNA_ReadInfoByte(PNA_INFO_REG_DATA, 0x5AA5u, (unsigned char)(0x1E + i));
     }
 
-    PNA3029CalMarker = PNA_ReadInfoByte(PNA_INFO_REG_DATA, 0x5AA5u, 0x1C);
-    if(PNA3029CalMarker == 0x5A) {
+    PAN3029CalMarker = PNA_ReadInfoByte(PNA_INFO_REG_DATA, 0x5AA5u, 0x1C);
+    if(PAN3029CalMarker == 0x5A) {
         PNA_WritePageReg(PNA_PAGE_AGC, PNA_INFO_REG_DCDC, 0xFD);
         if(temp[2] != 0) {
             PNA_WritePageReg(PNA_PAGE_SYS, PNA_SYS_REG_PA_CFG, temp[2]);
@@ -407,8 +407,8 @@ static void PNA_Calibrate(void)
         PNA_WritePageReg(PNA_PAGE_LORA, 0x1C, (unsigned char)(0xC0 | (temp[0] & 0x1F)));
         PNA_WritePageReg(PNA_PAGE_LORA, 0x1D, temp[1]);
     }
-    PNA3029CalPaBias = temp[2];
-    PNA3029PaBiasRaw = temp[2];
+    PAN3029CalPaBias = temp[2];
+    PAN3029PaBiasRaw = temp[2];
     PNA_SetPageRegBits(PNA_PAGE_AGC, PNA_INFO_REG_CTRL, PNA_INFO_UNLOCK_BIT);
 }
 
@@ -482,35 +482,35 @@ static void PNA_SelectChannel(void)
     unsigned char channel;
 
     channel = PNA_GetActiveChannel();
-    if(PNA3029CurrentChannel == channel) {
+    if(PAN3029CurrentChannel == channel) {
         return;
     }
 
-    PNA_SetFreq(PNA3029_RF_BASE_FREQ_HZ + ((unsigned long)channel * PNA3029_RF_CHANNEL_STEP_HZ));
-    PNA3029CurrentChannel = channel;
+    PNA_SetFreq(PAN3029_RF_BASE_FREQ_HZ + ((unsigned long)channel * PAN3029_RF_CHANNEL_STEP_HZ));
+    PAN3029CurrentChannel = channel;
 }
 
 static void PNA_ConfigUserParams(void)
 {
-    PNA3029CurrentChannel = 0xff;
+    PAN3029CurrentChannel = 0xff;
     PNA_SelectChannel();
-    PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_BW_CR, PNA3029_RF_BW_125K, PNA_REG_MASK_BW);
+    PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_BW_CR, PAN3029_RF_BW_125K, PNA_REG_MASK_BW);
     PNA_SetPageRegBits(PNA_PAGE_AGC, PNA_AGC_REG_LORA_GAIN, 0x02);
-    PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_SF_CRC, PNA3029_RF_SF9, PNA_REG_MASK_SF);
-    PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_BW_CR, PNA3029_RF_CR_4_5, PNA_REG_MASK_CR);
-    PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_SF_CRC, PNA3029_RF_CRC_OFF, PNA_REG_MASK_CRC);
-    PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_MODEM_OPT, PNA3029_RF_LDR_MODE, PNA_REG_MASK_LDR);
-    PNA_WritePageReg(PNA_PAGE_LORA, PNA_LORA_REG_PREAMBLE_L, PNA3029_RF_PREAMBLE_SHORT_L);
-    PNA_WritePageReg(PNA_PAGE_LORA, PNA_LORA_REG_PREAMBLE_H, PNA3029_RF_PREAMBLE_SHORT_H);
-    PNA_WritePageRegBits(PNA_PAGE_PKT, PNA_PKT_REG_IQ_CFG, PNA3029_RF_IQ_NORMAL, PNA_REG_MASK_IQ);
-    PNA_WritePageReg(PNA_PAGE_LORA, PNA_LORA_REG_SYNC_WORD, PNA3029_RF_SYNC_WORD);
+    PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_SF_CRC, PAN3029_RF_SF9, PNA_REG_MASK_SF);
+    PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_BW_CR, PAN3029_RF_CR_4_5, PNA_REG_MASK_CR);
+    PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_SF_CRC, PAN3029_RF_CRC_OFF, PNA_REG_MASK_CRC);
+    PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_MODEM_OPT, PAN3029_RF_LDR_MODE, PNA_REG_MASK_LDR);
+    PNA_WritePageReg(PNA_PAGE_LORA, PNA_LORA_REG_PREAMBLE_L, PAN3029_RF_PREAMBLE_SHORT_L);
+    PNA_WritePageReg(PNA_PAGE_LORA, PNA_LORA_REG_PREAMBLE_H, PAN3029_RF_PREAMBLE_SHORT_H);
+    PNA_WritePageRegBits(PNA_PAGE_PKT, PNA_PKT_REG_IQ_CFG, PAN3029_RF_IQ_NORMAL, PNA_REG_MASK_IQ);
+    PNA_WritePageReg(PNA_PAGE_LORA, PNA_LORA_REG_SYNC_WORD, PAN3029_RF_SYNC_WORD);
     PNA_WritePageReg(PNA_PAGE_LORA, PNA_LORA_REG_REGULATOR, 0x00);
     gPanRegulatorMode = 0;
 
-    PNA_WritePageRegBits(PNA_PAGE_PKT, PNA_PKT_REG_MODE_CFG, PNA3029_RF_MODE1, PNA_REG_MASK_MODE0);
+    PNA_WritePageRegBits(PNA_PAGE_PKT, PNA_PKT_REG_MODE_CFG, PAN3029_RF_MODE1, PNA_REG_MASK_MODE0);
     PNA_WritePageRegBits(PNA_PAGE_PKT, PNA_PKT_REG_MODE_CFG, 1, PNA_REG_MASK_CRC_IRQ);
-    PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_MODEM_OPT, PNA3029_RF_MODEM_OPT_OFF, PNA_REG_MASK_MODEM_OPT_2);
-    PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_MODEM_OPT, PNA3029_RF_MODEM_OPT_OFF, PNA_REG_MASK_MODEM_OPT_4);
+    PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_MODEM_OPT, PAN3029_RF_MODEM_OPT_OFF, PNA_REG_MASK_MODEM_OPT_2);
+    PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_MODEM_OPT, PAN3029_RF_MODEM_OPT_OFF, PNA_REG_MASK_MODEM_OPT_4);
     PNA_WritePageRegBits(PNA_PAGE_SYS, PNA_SYS_REG_DIO_MODE, 0, PNA_REG_BIT_DIO_MODE);
 
     PNA_SetTxPower();
@@ -528,20 +528,20 @@ static unsigned int PNA_GetTxWaitMs(unsigned char len, bool useWakeupPreamble)
     unsigned long waitMs;
 
     if(useWakeupPreamble) {
-        preambleSymbols = (((unsigned long)PNA3029_RF_PREAMBLE_LONG_H) << 8) | PNA3029_RF_PREAMBLE_LONG_L;
+        preambleSymbols = (((unsigned long)PAN3029_RF_PREAMBLE_LONG_H) << 8) | PAN3029_RF_PREAMBLE_LONG_L;
     }
     else {
-        preambleSymbols = (((unsigned long)PNA3029_RF_PREAMBLE_SHORT_H) << 8) | PNA3029_RF_PREAMBLE_SHORT_L;
+        preambleSymbols = (((unsigned long)PAN3029_RF_PREAMBLE_SHORT_H) << 8) | PAN3029_RF_PREAMBLE_SHORT_L;
     }
 
-    waitMs = ((preambleSymbols * PNA3029_TX_SYMBOL_US) + 999UL) / 1000UL;
-    waitMs += PNA3029_TX_WAIT_GUARD_MS + ((unsigned long)len * PNA3029_TX_WAIT_LEN_STEP_MS);
+    waitMs = ((preambleSymbols * PAN3029_TX_SYMBOL_US) + 999UL) / 1000UL;
+    waitMs += PAN3029_TX_WAIT_GUARD_MS + ((unsigned long)len * PAN3029_TX_WAIT_LEN_STEP_MS);
 
-    if(waitMs < PNA3029_TX_WAIT_MIN_MS) {
-        waitMs = PNA3029_TX_WAIT_MIN_MS;
+    if(waitMs < PAN3029_TX_WAIT_MIN_MS) {
+        waitMs = PAN3029_TX_WAIT_MIN_MS;
     }
-    if(waitMs > PNA3029_TX_WAIT_MAX_MS) {
-        waitMs = PNA3029_TX_WAIT_MAX_MS;
+    if(waitMs > PAN3029_TX_WAIT_MAX_MS) {
+        waitMs = PAN3029_TX_WAIT_MAX_MS;
     }
 
     return (unsigned int)waitMs;
@@ -575,13 +575,13 @@ static unsigned char PNA_CheckSpiAfterInit(void)
     testValue = (unsigned char)(oldValue ^ 0x5A);
     PNA_WritePageReg(PNA_PAGE_LORA, PNA_LORA_REG_SYNC_WORD, testValue);
     readValue = PNA_ReadPageReg(PNA_PAGE_LORA, PNA_LORA_REG_SYNC_WORD);
-    PNA3029SpiCheckReg = readValue;
+    PAN3029SpiCheckReg = readValue;
     PNA_WritePageReg(PNA_PAGE_LORA, PNA_LORA_REG_SYNC_WORD, oldValue);
     if(readValue != testValue) {
         return PNA_SPI_CHECK_SYNC_ERR;
     }
     readValue = PNA_ReadPageReg(PNA_PAGE_LORA, PNA_LORA_REG_SYNC_WORD);
-    PNA3029SpiCheckReg = readValue;
+    PAN3029SpiCheckReg = readValue;
     if(readValue != oldValue) {
         return PNA_SPI_CHECK_SYNC_ERR;
     }
@@ -590,13 +590,13 @@ static unsigned char PNA_CheckSpiAfterInit(void)
     testValue = (unsigned char)(oldValue ^ 0xA5);
     PNA_WritePageReg(PNA_PAGE_LORA, PNA_LORA_REG_PREAMBLE_L, testValue);
     readValue = PNA_ReadPageReg(PNA_PAGE_LORA, PNA_LORA_REG_PREAMBLE_L);
-    PNA3029SpiCheckReg = readValue;
+    PAN3029SpiCheckReg = readValue;
     PNA_WritePageReg(PNA_PAGE_LORA, PNA_LORA_REG_PREAMBLE_L, oldValue);
     if(readValue != testValue) {
         return PNA_SPI_CHECK_PREAMBLE_ERR;
     }
     readValue = PNA_ReadPageReg(PNA_PAGE_LORA, PNA_LORA_REG_PREAMBLE_L);
-    PNA3029SpiCheckReg = readValue;
+    PAN3029SpiCheckReg = readValue;
     if(readValue != oldValue) {
         return PNA_SPI_CHECK_PREAMBLE_ERR;
     }
@@ -604,7 +604,7 @@ static unsigned char PNA_CheckSpiAfterInit(void)
     return PNA_SPI_CHECK_OK;
 }
 
-void PNA3029_Reset(void)
+void PAN3029_Reset(void)
 {
     RFSPI_RFRESET_SETOUT_LOW;
     delayms(10);
@@ -613,11 +613,11 @@ void PNA3029_Reset(void)
 }
 
 unsigned char test ;
-void PNA3029_Init(void)
+void PAN3029_Init(void)
 {
     unsigned char irq;
 
-    PNA3029_Reset();
+    PAN3029_Reset();
     RFSPISetup();
     RFSPI_CLK_SETOUT_LOW;
     RFSPI_NSS_SETOUT_HIGH;
@@ -662,43 +662,43 @@ void PNA3029_Init(void)
     if(irq) {
         PNA_ClrIRQFlag(irq);
     }
-    PNA3029SpiCheckError = PNA_CheckSpiAfterInit();
-    PNA3029SpiOk = (PNA3029SpiCheckError == PNA_SPI_CHECK_OK);
+    PAN3029SpiCheckError = PNA_CheckSpiAfterInit();
+    PAN3029SpiOk = (PAN3029SpiCheckError == PNA_SPI_CHECK_OK);
 
     /* 强电供电、无功耗约束：初始化结束立即进入 RX 持续监听，
      * 避免停在 STB3 漏收对端首包。 */
-    if(PNA3029SpiOk) {
-        PNA3029_RX();
+    if(PAN3029SpiOk) {
+        PAN3029_RX();
     }
 }
 
-void PNA3029_SendPacket(unsigned char *TxBuffer, unsigned char Len)
+void PAN3029_SendPacket(unsigned char *TxBuffer, unsigned char Len)
 {
     unsigned long i;
     unsigned long waitMs;
     unsigned char irq;
     bool useWakeupPreamble;
 
-    if(!PNA3029SpiOk) {
+    if(!PAN3029SpiOk) {
         return;
     }
-    PNA3029TxDone = 0;
-    PNA3029TxLen = Len;
-    PNA3029TxElapsedMs = 0;
+    PAN3029TxDone = 0;
+    PAN3029TxLen = Len;
+    PAN3029TxElapsedMs = 0;
     useWakeupPreamble = PNA_NeedWakeupPreamble();
     waitMs = PNA_GetTxWaitMs(Len, useWakeupPreamble);
-    PNA3029TxUseLongPreamble = useWakeupPreamble ? 1 : 0;
-    PNA3029TxWaitMs = (unsigned int)waitMs;
+    PAN3029TxUseLongPreamble = useWakeupPreamble ? 1 : 0;
+    PAN3029TxWaitMs = (unsigned int)waitMs;
 
     RFTX_ON;
     PNA_ExitSleepState();
     PNA_SetRfState(PNA_RF_STATE_STB3);
     PNA_SelectChannel();
     if(useWakeupPreamble) {
-        PNA_SetPreamble(PNA3029_RF_PREAMBLE_LONG_L, PNA3029_RF_PREAMBLE_LONG_H);
+        PNA_SetPreamble(PAN3029_RF_PREAMBLE_LONG_L, PAN3029_RF_PREAMBLE_LONG_H);
     }
     else {
-        PNA_SetPreamble(PNA3029_RF_PREAMBLE_SHORT_L, PNA3029_RF_PREAMBLE_SHORT_H);
+        PNA_SetPreamble(PAN3029_RF_PREAMBLE_SHORT_L, PAN3029_RF_PREAMBLE_SHORT_H);
     }
     PNA_ClrIRQFlag(0x7F);
     PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_MODE, PNA_RF_TX_SINGLE, PNA_REG_BIT_LORA_TX_SINGLE);
@@ -709,27 +709,27 @@ void PNA3029_SendPacket(unsigned char *TxBuffer, unsigned char Len)
 
     for(i = 0; i < waitMs; i++) {
         irq = PNA_GetIRQFlag();
-        PNA3029LastIrq = irq;
+        PAN3029LastIrq = irq;
         if(irq & PNA_RF_IRQ_TX_DONE) {
             PNA_ClrIRQFlag(PNA_RF_IRQ_TX_DONE);
-            PNA3029TxDone = 1;
+            PAN3029TxDone = 1;
             break;
         }
         delayms(1);
         WDT_FEED;   /* 长前导发送可达 4~5s，长循环内必须喂狗 */
     }
-    PNA3029TxElapsedMs = (unsigned int)i;
-    if(!PNA3029TxDone) {
-        PNA3029TxTimeoutCount++;
+    PAN3029TxElapsedMs = (unsigned int)i;
+    if(!PAN3029TxDone) {
+        PAN3029TxTimeoutCount++;
     }
     PNA_TurnoffPA();
     PNA_SetRfState(PNA_RF_STATE_STB3);
-    PNA3029_RX();
+    PAN3029_RX();
 }
 
-void PNA3029_RX(void)
+void PAN3029_RX(void)
 {
-    if(!PNA3029SpiOk) {
+    if(!PAN3029SpiOk) {
         return;
     }
 
@@ -737,14 +737,14 @@ void PNA3029_RX(void)
     PNA_ExitSleepState();
     PNA_SetRfState(PNA_RF_STATE_STB3);
     PNA_SelectChannel();
-    PNA_SetPreamble(PNA3029_RF_PREAMBLE_RX_L, PNA3029_RF_PREAMBLE_RX_H);
+    PNA_SetPreamble(PAN3029_RF_PREAMBLE_RX_L, PAN3029_RF_PREAMBLE_RX_H);
     PNA_TurnonRxAnt();
     PNA_ResetPageRegBits(PNA_PAGE_SYS, PNA_SYS_REG_PA_CTRL, PNA_REG_BIT_PA_ENABLE);
     PNA_WritePageRegBits(PNA_PAGE_LORA, PNA_LORA_REG_MODE, PNA_RF_RX_CONTINUOUS, PNA_REG_MASK_LORA_RX_MODE);
     PNA_SetRfState(PNA_RF_STATE_RX);
 }
 
-unsigned char PNA3029_ReceivePacket(unsigned char* RxBuffer)
+unsigned char PAN3029_ReceivePacket(unsigned char* RxBuffer)
 {
     /* 返回值约定：1=成功 2=RX 超时 0=无包/CRC 错/长度异常，
      * 与原 SX1278ReceivePacket 的 0/1 语义兼容，上层 if(re) 判断不需改动。 */
@@ -752,20 +752,20 @@ unsigned char PNA3029_ReceivePacket(unsigned char* RxBuffer)
     unsigned char len;
     unsigned char peek[PNA_RX_PEEK_LEN];
 
-    if(!PNA3029SpiOk) {
+    if(!PAN3029SpiOk) {
         return 0;
     }
 
     irq = PNA_GetIRQFlag();
-    PNA3029LastIrq = irq;
+    PAN3029LastIrq = irq;
     if(irq & PNA_RF_IRQ_CRC_ERR) {
         PNA_ClrIRQFlag(PNA_RF_IRQ_CRC_ERR);
-        PNA3029RxError = PNA_RF_IRQ_CRC_ERR;
+        PAN3029RxError = PNA_RF_IRQ_CRC_ERR;
         return 0;
     }
     if(irq & PNA_RF_IRQ_RX_TIMEOUT) {
         PNA_ClrIRQFlag(PNA_RF_IRQ_RX_TIMEOUT);
-        PNA3029RxError = PNA_RF_IRQ_RX_TIMEOUT;
+        PAN3029RxError = PNA_RF_IRQ_RX_TIMEOUT;
         return 2;
     }
     if(!(irq & PNA_RF_IRQ_RX_DONE)) {
@@ -773,23 +773,23 @@ unsigned char PNA3029_ReceivePacket(unsigned char* RxBuffer)
     }
 
     len = PNA_ReadPageReg(PNA_PAGE_PKT, PNA_PKT_REG_RX_LEN);
-    PNA3029RxLen = len;
+    PAN3029RxLen = len;
     if(len >= BufferLenth - 1) {
         RFSPIReadBurstReg(PNA_REG_FIFO, peek, PNA_RX_PEEK_LEN);
         PNA_ClrIRQFlag(PNA_RF_IRQ_RX_DONE);
-        PNA3029RxError = 0x80;
+        PAN3029RxError = 0x80;
         return 0;
     }
 
     RFSPIReadBurstReg(PNA_REG_FIFO, RxBuffer, len);
     PNA_ClrIRQFlag(PNA_RF_IRQ_RX_DONE);
-    PNA3029RxError = 0;
+    PAN3029RxError = 0;
     return 1;
 }
 
-void PNA3029_CADInit(void)
+void PAN3029_CADInit(void)
 {
-    if(!PNA3029SpiOk) {
+    if(!PAN3029SpiOk) {
         return;
     }
 
@@ -798,15 +798,15 @@ void PNA3029_CADInit(void)
     PNA_ClrIRQFlag(0x7F);
     PNA_ConfigGpio(PNA_GPIO_CAD_IRQ, 1);
     PNA_ResetPageRegBits(PNA_PAGE_SYS, PNA_SYS_REG_CAD_CTRL, PNA_REG_BIT_CAD_DISABLE);
-    PNA_WritePageReg(PNA_PAGE_PKT, PNA_PKT_REG_CAD_THRESHOLD, PNA3029_WOR_CAD_THRESHOLD);
-    PNA_WritePageRegBits(PNA_PAGE_PKT, PNA_PKT_REG_MODE_CFG, PNA3029_WOR_CAD_SYMBOLS - 1, PNA_REG_MASK_LORA_RX_MODE);
-    PNA_WritePageReg(PNA_PAGE_PKT, PNA_PKT_REG_CAD_DONE_CFG, PNA3029_WOR_CAD_DONE_ACTIVE);
-    PNA3029_RX();
+    PNA_WritePageReg(PNA_PAGE_PKT, PNA_PKT_REG_CAD_THRESHOLD, PAN3029_WOR_CAD_THRESHOLD);
+    PNA_WritePageRegBits(PNA_PAGE_PKT, PNA_PKT_REG_MODE_CFG, PAN3029_WOR_CAD_SYMBOLS - 1, PNA_REG_MASK_LORA_RX_MODE);
+    PNA_WritePageReg(PNA_PAGE_PKT, PNA_PKT_REG_CAD_DONE_CFG, PAN3029_WOR_CAD_DONE_ACTIVE);
+    PAN3029_RX();
 }
 
-void PNA3029_Sleep(void)
+void PAN3029_Sleep(void)
 {
-    if(!PNA3029SpiOk) {
+    if(!PAN3029SpiOk) {
         return;
     }
 

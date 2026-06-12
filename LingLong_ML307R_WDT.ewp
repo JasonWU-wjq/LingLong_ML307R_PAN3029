@@ -2549,7 +2549,7 @@
             <name>$PROJ_DIR$\usr_lib\nbpro.h</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\usr_lib\PNA3029.h</name>
+            <name>$PROJ_DIR$\usr_lib\PAN3029.h</name>
         </file>
         <file>
             <name>$PROJ_DIR$\usr_lib\rf.h</name>
@@ -2576,7 +2576,7 @@
             <name>$PROJ_DIR$\user_src\NetDataPro.c</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\user_src\PNA3029.c</name>
+            <name>$PROJ_DIR$\user_src\PAN3029.c</name>
         </file>
         <file>
             <name>$PROJ_DIR$\user_src\RFSPI.c</name>

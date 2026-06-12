@@ -1,13 +1,13 @@
 # 玲珑壁挂炉 IoT 控制器
 
-**LingLong Gas Boiler IoT Controller — ML307R (CAT1) + PNA3029 (LoRa)**
+**LingLong Gas Boiler IoT Controller — ML307R (CAT1) + PAN3029 (LoRa)**
 
 ---
 
 ## 项目概述
 
 本项目是玲珑壁挂炉配套的物联网通信控制器固件，运行于 Renesas RA2L1 MCU。  
-通过 ML307R CAT1 模块实现云端数据上报，通过 PNA3029 LoRa 模块实现与无线温控器的本地无线通信，同时支持循环水泵（LLS Pump）的定时/巡回自动控制。
+通过 ML307R CAT1 模块实现云端数据上报，通过 PAN3029 LoRa 模块实现与无线温控器的本地无线通信，同时支持循环水泵（LLS Pump）的定时/巡回自动控制。
 
 ---
 
@@ -17,7 +17,7 @@
 |------|------------|
 | MCU | Renesas RA2L1 (R7FA2L1AB2DFL)，48 PIN |
 | CAT1 模块 | ML307R，AT 指令驱动（UART9，9600 bps） |
-| LoRa 模块 | PNA3029，477 MHz / SF9 / BW125k / CR4/5，SPI 接口 |
+| LoRa 模块 | PAN3029，477 MHz / SF9 / BW125k / CR4/5，SPI 接口 |
 | EEPROM | AT24 系列，存储历史数据与系统参数 |
 | 串口通信 | UART0（9600 bps），与壁挂炉主板通信 |
 | IDE | IAR EWARM + Renesas FSP |
@@ -32,7 +32,7 @@
 - 支持远程参数下发（洗浴温度、采暖温度、循环泵配置等）
 - 固件升级（OTA 分帧传输）
 
-### 无线温控器通信（LoRa / PNA3029）
+### 无线温控器通信（LoRa / PAN3029）
 - LDC（Low Duty Cycle）唤醒机制：长前导码（~4.3 s）唤醒休眠温控器
 - ActiveTime 自动切换：15 s 活跃窗口内使用短前导码，节省发送时间
 - 支持配对（C3 01）、握手（C3 02）、心跳上报（C0 19）、参数设置（C0 20）等协议帧
@@ -60,7 +60,7 @@
 │   ├── frame.c             LoRa 帧解析与处理、无线响应
 │   ├── NetDataPro.c        云端协议帧解析与上报
 │   ├── Nb_Pro.c / _603.c   CAT1 AT 指令驱动
-│   ├── PNA3029.c           LoRa 模块驱动（SPI）
+│   ├── PAN3029.c           LoRa 模块驱动（SPI）
 │   ├── user_uart.c         串口收发
 │   ├── usr_timer.c         定时器中断 / 软件计时
 │   ├── save.c              EEPROM 历史数据存取
@@ -100,7 +100,7 @@
 
 | 标签 | 说明 |
 |------|------|
-| `_3029` | 使用 PNA3029 LoRa 模块（替代早期 SX1278） |
+| `_3029` | 使用 PAN3029 LoRa 模块（替代早期 SX1278） |
 | `_WDT` | 启用硬件看门狗（R_WDT）|
 | `_addPump` | 新增循环水泵（LLS Pump）控制逻辑 |
 | `808A` | 壁挂炉主板型号适配（808A 协议，供暖水温度字段） |

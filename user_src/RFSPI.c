@@ -3,10 +3,10 @@
  *
  *  Created on: 2021年6月3日
  *      Author: WJQ
- *  Updated  on: 2026-05-14  PNA3029 寻址格式：(addr<<1)|0x01 写 / (addr<<1)&0xFE 读
+ *  Updated  on: 2026-05-14  PAN3029 寻址格式：(addr<<1)|0x01 写 / (addr<<1)&0xFE 读
  *
  * GPIO bit-bang SPI，沿用原 SX1278 引脚（CLK=P208, MOSI=P408,
- * MISO=P407, NSS=P409，复位=P207）。PNA3029 不使用 MISO 作 busy
+ * MISO=P407, NSS=P409，复位=P207）。PAN3029 不使用 MISO 作 busy
  * 标志，所以读写路径不再调用 WaitReady。
  */
 
@@ -115,7 +115,7 @@ void RFSPIReadBurstReg(unsigned char addr, unsigned char *buffer, unsigned char 
   RFSPI_NSS_SETOUT_HIGH;
 }
 
-//Wait ready - kept for binary compatibility, no-op for PNA3029
+//Wait ready - kept for binary compatibility, no-op for PAN3029
 void WaitReady(void)
 {
   ;

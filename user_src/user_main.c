@@ -60,9 +60,9 @@ void PowerOn_HanShake(void)
   buf[6] = 0xAA;
   
   LDCMode = 1;
-  PNA3029_SendPacket(buf,7);
+  PAN3029_SendPacket(buf,7);
   LDCMode = 0;
-  PNA3029_Init();
+  PAN3029_Init();
 }
 
 void user_main(void)
@@ -138,8 +138,8 @@ void user_main(void)
       LDCMode = 0;
       ActiveTime = ActiveHoldTime;
       ///===============================
-      PNA3029_SendPacket(tempbuf,tempbuf[0]+1);   //无线发送
-      PNA3029_RX();
+      PAN3029_SendPacket(tempbuf,tempbuf[0]+1);   //无线发送
+      PAN3029_RX();
       GreenLed_ON;
       RedLed_OFF;
               
@@ -152,7 +152,7 @@ void user_main(void)
     if(ReceiveFlag)
     {
       ReceiveFlag = 0x00;
-      PNA3029_ReceivePacket(RF_RxBuf);
+      PAN3029_ReceivePacket(RF_RxBuf);
       delayms(100);
 
       if(RF_RxBuf[1] == 0xBB && RF_RxBuf[0] < BufferLenth && RF_RxBuf[RF_RxBuf[0]] == 0x66)
@@ -177,7 +177,7 @@ void user_main(void)
           RELAY_OFF;
         }
       }
-      PNA3029_Init();
+      PAN3029_Init();
     }
   }
 //====================================================================
@@ -646,7 +646,7 @@ void system_init(void)
   }
   
 //#ifndef XIAO_RUI_NO_RF
-  PNA3029_Init();   //LoRa,RX（PNA3029 内部完成 Settings 后已自动进入 RX）
+  PAN3029_Init();   //LoRa,RX（PAN3029 内部完成 Settings 后已自动进入 RX）
 //#endif
   //intp6
   err = R_ICU_ExternalIrqOpen (&g_external_irq6_ctrl,&g_external_irq6_cfg);

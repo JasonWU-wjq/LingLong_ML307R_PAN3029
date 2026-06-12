@@ -273,7 +273,7 @@ void ProcessRF(void)
     memset(RF_RxBuf,0x00,BufferLenth);
     GetDataTime = GetInfoTime;//0x05;
     cmd = 0;
-    re = PNA3029_ReceivePacket(RF_RxBuf);
+    re = PAN3029_ReceivePacket(RF_RxBuf);
     delayms(300);
 
     if(re && RF_RxBuf[10] <= (BufferLenth - 24))
@@ -284,7 +284,7 @@ void ProcessRF(void)
       {
         if(DeviceSta != MatchCode)//�յ�����������ǲ��Ǳ���û�д��ڶ���״̬ ���˳�
         {
-          PNA3029_RX();
+          PAN3029_RX();
           return;
         }
         rf_ansflag = 1;
@@ -476,7 +476,7 @@ void ProcessRF(void)
         }
         RF_RxBuf[RF_RxBuf[10]+12] = 0x16;
 
-        PNA3029_SendPacket(RF_RxBuf, RF_RxBuf[10]+13);
+        PAN3029_SendPacket(RF_RxBuf, RF_RxBuf[10]+13);
 #ifdef NET_DELAY_TEST
         SendNbData("RF_Ack_send\n",12); 
 #endif
@@ -529,7 +529,7 @@ void ProcessRF(void)
 #endif
       }
     }
-    PNA3029_RX();   /* 处理完一帧后切回持续 RX，避免重新 Init 造成长时间不接收 */
+    PAN3029_RX();   /* 处理完一帧后切回持续 RX，避免重新 Init 造成长时间不接收 */
   }
   ///============================================20250523��չ
   if(ReissuedTime >= TIMER_8S)   //�ط�һ�μ���,����ǰ�����ʽ���ͣ�֮ǰ6sʱ����Щ���ţ����ܻ���ֳ�ͻ
@@ -540,9 +540,9 @@ void ProcessRF(void)
     SendNbData("RF_send_again",13); 
 #endif
     LDCMode = 1;
-    PNA3029_SendPacket(ReSendBuf+1,ReSendBuf[0]);
+    PAN3029_SendPacket(ReSendBuf+1,ReSendBuf[0]);
     LDCMode = 0;
-    PNA3029_RX();
+    PAN3029_RX();
   }
   ///============================================
 }
@@ -666,10 +666,10 @@ unsigned char ReadThermostatInfo(unsigned char n)
   txbuf[21] = calSum(txbuf,21);
   txbuf[22] = 0x16;
   LDCMode = 0x01;    //ǰ������
-  PNA3029_SendPacket(txbuf,23);
-  //PNA3029_SendPacket(txbuf,23);
+  PAN3029_SendPacket(txbuf,23);
+  //PAN3029_SendPacket(txbuf,23);
   LDCMode = 0x00;
-  PNA3029_RX();
+  PAN3029_RX();
   ReadBeginFlag = 1;
   GetThermInfoOverTime = 0;
   return 1;
@@ -702,10 +702,10 @@ void LoRaSendSettingTemp(unsigned char *id,unsigned char temp)
   txbuf[18] = 0x16;
   
   LDCMode = 1;
-  PNA3029_SendPacket(txbuf,19);
-  //PNA3029_SendPacket(txbuf,19);
+  PAN3029_SendPacket(txbuf,19);
+  //PAN3029_SendPacket(txbuf,19);
   LDCMode = 0;
-  PNA3029_RX();
+  PAN3029_RX();
 }
 
 void SendRecData(unsigned char flag,unsigned char type) //发送接收器命令
@@ -752,8 +752,8 @@ void SendRecData(unsigned char flag,unsigned char type) //发送接收器命令
   LDCMode = 0;
   ActiveTime = TIMER_3S;
   
-  PNA3029_SendPacket(txbuf,24);
-  PNA3029_SendPacket(txbuf,24);
-  PNA3029_RX();
+  PAN3029_SendPacket(txbuf,24);
+  PAN3029_SendPacket(txbuf,24);
+  PAN3029_RX();
 }
 

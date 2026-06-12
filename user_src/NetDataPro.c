@@ -1044,9 +1044,9 @@ void ProcessRevData(void)
 #ifdef NET_DELAY_TEST
   SendNbData("RF_send_begin",13); 
 #endif
-    PNA3029_SendPacket(txbuf,txbuf[10]+13);
-    //PNA3029_SendPacket(txbuf,txbuf[10]+13);
-    PNA3029_RX();
+    PAN3029_SendPacket(txbuf,txbuf[10]+13);
+    //PAN3029_SendPacket(txbuf,txbuf[10]+13);
+    PAN3029_RX();
     LDCMode = 0;
     //ThermostatControlFlag = 0x01;
     //ThermostatControlSer = TxBuffer[14];
@@ -1154,10 +1154,10 @@ void ProcessRevData(void)
         txbuf[21] = calSum(txbuf,21);
         txbuf[22] = 0x16;
         LDCMode = 0x01;    //ǰ������
-        PNA3029_SendPacket(txbuf,23);
-        //PNA3029_SendPacket(txbuf,23);
+        PAN3029_SendPacket(txbuf,23);
+        //PAN3029_SendPacket(txbuf,23);
         LDCMode = 0x00;
-        PNA3029_RX();
+        PAN3029_RX();
         RELAY_OFF;      //����ס�¿����󣬱ڹ�¯����ǿ�Ʋ�ů
       //===============================
       }

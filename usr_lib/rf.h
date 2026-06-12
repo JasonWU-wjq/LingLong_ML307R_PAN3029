@@ -9,7 +9,7 @@
 #define RF_H_
 
 //#include   "sys.h"
-#include   "PNA3029.h"
+#include   "PAN3029.h"
 #include   "ExternPara.h"
 
 unsigned char ProcessFrame(void);
