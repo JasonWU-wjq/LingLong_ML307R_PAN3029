@@ -62,7 +62,7 @@ void PowerOn_HanShake(void)
   LDCMode = 1;
   PAN3029_SendPacket(buf,7);
   LDCMode = 0;
-  PAN3029_Init();
+  PAN3029_RX();
 }
 
 void user_main(void)
@@ -319,6 +319,7 @@ void user_main(void)
       }
       ///==============================================
       WDT_FEED;   //����������ι��������ÿ���ȡһ����Ϣ
+      if(!PAN3029SpiOk) { PAN3029_Init(); }   //SPI��λ�Զ��ָ�
       ///==============================================
 	  }
 
